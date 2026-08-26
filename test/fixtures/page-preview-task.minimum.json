@@ -1,0 +1,48 @@
+{
+  "kind": "PagePreviewTask",
+  "candidate": {
+    "artifactId": "artifact.candidate.001",
+    "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "mediaType": "application/json",
+    "sizeBytes": 128
+  },
+  "candidateDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "resolved": {
+    "catalogSnapshot": {
+      "artifactId": "artifact.catalog.001",
+      "digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "mediaType": "application/json",
+      "sizeBytes": 128
+    },
+    "approvedAssets": [],
+    "puckSchemaRevision": "1.0.0",
+    "puckRuntimeRevision": "1.0.0"
+  },
+  "matrix": [
+    {
+      "viewportWidth": 1280,
+      "viewportHeight": 720,
+      "locale": "en",
+      "theme": "light"
+    }
+  ],
+  "runtimeProfile": {
+    "deterministicSeed": 0,
+    "timezone": "UTC",
+    "reducedMotion": false,
+    "networkPolicy": "deny-all"
+  },
+  "deadlineAt": "2026-08-24T00:00:00.000Z",
+  "limits": {
+    "timeoutMilliseconds": 60000,
+    "memoryBytes": 67108864,
+    "cpuMillis": 60000,
+    "gpuMillis": 0,
+    "outputBytes": 1048576
+  },
+  "expected": {
+    "contractBomDigest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "catalogDigest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "runtimeDigest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+  }
+}
