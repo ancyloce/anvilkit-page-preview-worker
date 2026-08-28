@@ -41,6 +41,8 @@ InputRequest?: InputRequestContract
 IssueApplyAuthorizationRequest?: IssueApplyAuthorizationRequestContract
 IssueArtifactContentGrantRequest?: IssueArtifactContentGrantRequestContract
 IssuedApplyAuthorization?: IssuedApplyAuthorizationContract
+ModelInvocationRequest?: ModelInvocationRequestContract
+ModelInvocationResult?: ModelInvocationResultContract
 PageCandidate?: PageCandidateContract
 PagePreviewResult?: PagePreviewResultContract
 PagePreviewTask?: PagePreviewTaskContract
@@ -153,7 +155,7 @@ policyId: SharedPrimitivesActorId
 version: string
 }
 /**
- * Bounded AgentDefinition wire contract governed by PRD 0012 and ADR-018. A definition is immutable by definitionId and definitionDigest and carries role, owner, instruction digest, input/output schema identity, Tool profile, delegation constraints, repair policy, and evaluation profile.
+ * Bounded AgentDefinition wire contract governed by PRD 0012 and ADR-018. A definition is immutable by definitionId and definitionDigest and carries role, owner, instruction digest, input/output schema identity, Tool profile, delegation constraints, repair policy, and evaluation profile. The runtime binding names the one runtime release permitted to execute this definition — unit, manifest digest, image digest, invocation protocol digest, and workload audience. It is an immutable pin, not a mutable discovery hint.
  */
 export interface AgentDefinitionContract {
 /**
@@ -184,6 +186,13 @@ maximumAttempts: number
 mode: ("reject" | "bounded-repair")
 }
 role: ("manager" | "specialist")
+runtimeBinding: {
+invocationProtocolDigest: SharedPrimitivesDigest
+runtimeAudience: string
+runtimeImageDigest: SharedPrimitivesDigest
+runtimeManifestDigest: SharedPrimitivesDigest
+runtimeUnitId: SharedPrimitivesActorId
+}
 /**
  * @minItems 1
  * @maxItems 16
@@ -282,7 +291,7 @@ kind: "AgentRunSnapshot"
 run: AgentRunContract
 }
 /**
- * Bounded AgentRun wire contract governed by PRD 0012.
+ * Bounded AgentRun wire contract governed by PRD 0012. The runtime binding pinned at creation is immutable for the life of the Run: registry changes after Run creation never alter which runtime release its attempts may execute on.
  */
 export interface AgentRunContract {
 actorId: SharedPrimitivesActorId
@@ -301,6 +310,13 @@ problem?: ProblemDetailsContract
 resourceRevision: number
 rootRunId: SharedPrimitivesActorId
 runId: SharedPrimitivesActorId
+runtimeBinding: {
+invocationProtocolDigest: SharedPrimitivesDigest
+runtimeAudience: string
+runtimeImageDigest: SharedPrimitivesDigest
+runtimeManifestDigest: SharedPrimitivesDigest
+runtimeUnitId: SharedPrimitivesActorId
+}
 status: ("created" | "preparing" | "planning" | "awaiting_input" | "executing" | "validating" | "awaiting_review" | "awaiting_approval" | "committing" | "awaiting_domain_confirmation" | "conflict" | "cancelling" | "failed" | "completed" | "cancelled" | "refused" | "discarded")
 target: SharedPrimitivesTargetReference
 updatedAt: SharedPrimitivesTimestamp
@@ -344,9 +360,14 @@ targetType: string
 workspaceId: SharedPrimitivesActorId
 }
 /**
- * Immutable binding between one Agent Runtime Unit and the single AgentDefinition it is permitted to execute. It pins the image, provenance, and invocation protocol the unit was released with, the workload identity and the closed set of control-plane endpoints it may reach, and the queue, concurrency, resource, scaling, telemetry, drain, and rollback profile it is operated under. It carries execution-plane binding only: it never confers AgentRun, workflow, Tool, budget, approval, artifact, or business authority, and a runtime unit cannot reach another Agent Runtime Unit through it.
+ * Immutable binding between one Agent Runtime Unit and the single AgentDefinition it is permitted to execute. It pins the image, provenance, and invocation protocol the unit was released with, the workload identity and the closed set of control-plane endpoints it may reach, and the queue, concurrency, resource, scaling, telemetry, drain, and rollback profile it is operated under. It carries execution-plane binding only: it never confers AgentRun, workflow, Tool, budget, approval, artifact, or business authority, and a runtime unit cannot reach another Agent Runtime Unit through it. The manifest also declares the role the unit plays, the task capabilities it is able to serve — the surface deterministic selection matches an AgentTask against — and its release lifecycle state, so revocation and emergency disable are contract surface rather than operational convention.
  */
 export interface AgentRuntimeManifestContract {
+/**
+ * @minItems 1
+ * @maxItems 8
+ */
+capabilities: [("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute")]|[("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute"), ("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute")]|[("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute"), ("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute"), ("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute")]|[("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute"), ("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute"), ("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute"), ("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute")]|[("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute"), ("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute"), ("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute"), ("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute"), ("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute")]|[("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute"), ("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute"), ("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute"), ("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute"), ("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute"), ("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute")]|[("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute"), ("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute"), ("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute"), ("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute"), ("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute"), ("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute"), ("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute")]|[("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute"), ("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute"), ("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute"), ("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute"), ("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute"), ("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute"), ("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute"), ("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute")]
 definition: SharedPrimitivesDefinitionReference
 execution: {
 cpuMillis: number
@@ -363,6 +384,11 @@ signatureDigest: SharedPrimitivesDigest
 sourceCommit: string
 }
 kind: "AgentRuntimeManifest"
+lifecycle: {
+effectiveAt: SharedPrimitivesTimestamp
+reasonCode?: string
+state: ("active" | "revoked" | "disabled")
+}
 protocol: {
 contractBomReference: SharedPrimitivesContractBomReference
 invocationProtocolDigest: SharedPrimitivesDigest
@@ -373,6 +399,7 @@ owner: string
 rollbackTarget: SharedPrimitivesDigest
 rolloutPolicy: "new-runs-only"
 }
+role: ("manager" | "specialist")
 runtimeUnitId: SharedPrimitivesActorId
 scaling: {
 maxReplicas: number
@@ -396,9 +423,10 @@ workloadIdentity: string
 }
 }
 /**
- * Signed, bounded result returned by one Agent Runtime Unit for exactly one AgentTask attempt. It reports which definition, runtime manifest, invocation protocol, and image digests actually served the attempt, the physical attempt identity and execution generation it belongs to, the metered usage it consumed, one bounded TurnDecision, safe coded diagnostics, and its signature and provenance references. It is a proposal that Agent Service validates and may reject: it never carries authoritative workflow state, never commits, approves, or publishes, and never names another Agent Runtime Unit to call.
+ * Signed, bounded result returned by one Agent Runtime Unit for exactly one physical attempt of one AgentTask. It echoes the complete binding it was dispatched under — logical task, physical attempt, attempt number, execution generation, lease epoch, fence token, and the runtime unit, manifest, image, and invocation protocol digests that actually served the attempt — reports one bounded TurnDecision with its artifact outputs and content digests, a result status with a governed reason code, the per-attempt model, tool, token, duration, and cost usage it consumed, safe coded diagnostics, and a complete signature envelope over the RFC 8785 canonical bytes of the result statement. It is a proposal Agent Service verifies and may reject: it never carries authoritative workflow state, never commits, approves, or publishes, and never names another Agent Runtime Unit to call.
  */
 export interface AgentRuntimeResultContract {
+attemptNumber: number
 /**
  * @minItems 0
  * @maxItems 16
@@ -813,13 +841,10 @@ code: string
 detail: string
 }]
 executionGeneration: number
+fenceToken: string
 kind: "AgentRuntimeResult"
+leaseEpoch: number
 physicalAttemptId: SharedPrimitivesActorId
-provenance: {
-signatureAlgorithm: ("dsse-ed25519-v1" | "jws-eddsa-v1")
-signatureDigest: SharedPrimitivesDigest
-statementDigest: SharedPrimitivesDigest
-}
 rootRunId: SharedPrimitivesActorId
 runId: SharedPrimitivesActorId
 selected: {
@@ -827,6 +852,18 @@ definitionDigest: SharedPrimitivesDigest
 imageDigest: SharedPrimitivesDigest
 invocationProtocolDigest: SharedPrimitivesDigest
 runtimeManifestDigest: SharedPrimitivesDigest
+runtimeUnitId: SharedPrimitivesActorId
+}
+signature: {
+algorithm: ("dsse-ed25519-v1" | "jws-eddsa-v1")
+keyId: string
+provenanceReference: SharedPrimitivesDigest
+signature: string
+statementDigest: SharedPrimitivesDigest
+}
+status: {
+reasonCode: string
+status: ("completed" | "failed" | "refused" | "cancelled")
 }
 taskId: SharedPrimitivesActorId
 traceContext: SharedPrimitivesTraceContext
@@ -840,9 +877,12 @@ decision: ("continue" | "tool_call" | "delegate_agent" | "need_input" | "final" 
 payload: SharedPrimitivesBoundedStringMap
 }
 usage: {
+cost: SharedPrimitivesCost
 durationMilliseconds: number
 inputTokens: number
+modelCalls: number
 outputTokens: number
+toolCalls: number
 }
 }
 /**
@@ -860,7 +900,7 @@ turnId?: SharedPrimitivesActorId
 workspaceId: SharedPrimitivesActorId
 }
 /**
- * Bounded AgentTask wire contract governed by PRD 0012.
+ * Bounded AgentTask wire contract governed by PRD 0012. One AgentTask is a logical unit of work; each actual execution of it is a physical attempt with its own attempt identity, lease epoch, and fence token. The task pins the Agent Definition and the runtime release permitted to execute it, carries the audience the task-scoped credential is issued for, and expires: a runtime may not admit it after expiresAt. The raw fence token is a commit capability and must never be written to logs or public events; persistent diagnostics may record its digest instead.
  */
 export interface AgentTaskContract {
 /**
@@ -868,20 +908,34 @@ export interface AgentTaskContract {
  * @maxItems 32
  */
 artifactInputs: SharedPrimitivesArtifactReference[]
+attemptNumber: number
+authorizationAudience: string
 capability: ("provider.invoke" | "contract.validate" | "artifact.scan" | "fake.execute")
 contractBomReference: SharedPrimitivesContractBomReference
+definition: SharedPrimitivesDefinitionReference
 executionGeneration: number
+expiresAt: SharedPrimitivesTimestamp
+fenceToken: string
 idempotency: SharedPrimitivesIdempotency
 inputSchema: SharedPrimitivesSchemaReference
 kind: "AgentTask"
+leaseEpoch: number
 limits: SharedPrimitivesResourceLimits
 parameters: SharedPrimitivesBoundedStringMap
+physicalAttemptId: SharedPrimitivesActorId
 resources: {
 priority: number
 resourceClass: ("interactive-cpu" | "batch-cpu" | "interactive-gpu" | "batch-gpu")
 }
 rootRunId: SharedPrimitivesActorId
 runId: SharedPrimitivesActorId
+runtimeBinding: {
+invocationProtocolDigest: SharedPrimitivesDigest
+runtimeAudience: string
+runtimeImageDigest: SharedPrimitivesDigest
+runtimeManifestDigest: SharedPrimitivesDigest
+runtimeUnitId: SharedPrimitivesActorId
+}
 taskId: SharedPrimitivesActorId
 traceContext: SharedPrimitivesTraceContext
 }
@@ -4592,6 +4646,48 @@ export interface IssuedApplyAuthorizationContract {
 authorization: ApplyAuthorizationContract
 compactJws: string
 kind: "IssuedApplyAuthorization"
+}
+/**
+ * Bounded request one Agent Runtime Unit sends to the governed Model Gateway for exactly one physical attempt. The runtime never holds provider credentials and never selects a provider: it names the attempt it is executing, the definition and model policy the Agent Service pinned, and the digests of the compiled context and prompt the gateway must use. The gateway resolves the provider, enforces the policy and the attempt's remaining budget, and attributes every token it spends to this attempt.
+ */
+export interface ModelInvocationRequestContract {
+attemptNumber: number
+contextDigest: SharedPrimitivesDigest
+contractBomReference: SharedPrimitivesContractBomReference
+definition: SharedPrimitivesDefinitionReference
+executionGeneration: number
+idempotency: SharedPrimitivesIdempotency
+kind: "ModelInvocationRequest"
+limits: SharedPrimitivesResourceLimits
+modelPolicy: SharedPrimitivesPolicyReference
+physicalAttemptId: SharedPrimitivesActorId
+promptDigest: SharedPrimitivesDigest
+rootRunId: SharedPrimitivesActorId
+runId: SharedPrimitivesActorId
+taskId: SharedPrimitivesActorId
+traceContext: SharedPrimitivesTraceContext
+}
+/**
+ * Bounded result the governed Model Gateway returns for exactly one ModelInvocationRequest. It carries the bounded model output and its content digest, the governed outcome and reason code, and the token, duration, and cost usage the gateway metered and recorded against the attempt. It never carries provider credentials, provider-native payloads, or an instruction to call another runtime unit.
+ */
+export interface ModelInvocationResultContract {
+attemptNumber: number
+executionGeneration: number
+invocationId: SharedPrimitivesActorId
+kind: "ModelInvocationResult"
+outcome: ("ok" | "refused" | "problem")
+output: SharedPrimitivesBoundedStringMap
+outputDigest: SharedPrimitivesDigest
+physicalAttemptId: SharedPrimitivesActorId
+reasonCode: string
+taskId: SharedPrimitivesActorId
+traceContext: SharedPrimitivesTraceContext
+usage: {
+cost: SharedPrimitivesCost
+durationMilliseconds: number
+inputTokens: number
+outputTokens: number
+}
 }
 /**
  * Reviewable page-generation proposal bound to the exact inputs that produced it. It names the target and the base revision it was generated against, references the canonical Puck Data document that is the authoritative page content, and pins the target, catalog, contract-BOM, definition, and policy digests so a reviewer and the apply path resolve the same bytes the run saw. It carries validation receipts, the preview task and accepted preview result, a bounded generation summary and declared assumptions, bounded model, tool, delegation, and evidence references, and stable coded warnings a reviewer must see. Canonical Puck Data is authoritative within the candidate; pageIr is optional and derived, and never becomes the page document. The candidate is a proposal only: it commits nothing, approves nothing, and grants no authority to persist a page.
