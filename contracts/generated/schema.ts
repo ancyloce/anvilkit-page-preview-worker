@@ -4,9 +4,9 @@ export type SharedPrimitivesActorId = string
 export type SharedPrimitivesTimestamp = string
 export type SharedPrimitivesDigest = string
 export type SharedPrimitivesDecimalString = string
+export type SharedPrimitivesCursor = string
 export type ContractBomComponentKind = ("agent-definition" | "asyncapi" | "declarative-bundle" | "fixture-manifest" | "generated-binding" | "generator" | "json-schema" | "openapi" | "policy" | "registry-set" | "runtime" | "tool-profile")
 export type ContractBomComponentName = string
-export type SharedPrimitivesCursor = string
 export type SharedPrimitivesIntegerString = string
 
 export interface AnvilKitContracts {
@@ -24,10 +24,17 @@ AgentTask?: AgentTaskContract
 ApplyAuthorization?: ApplyAuthorizationContract
 ApprovalRequest?: ApprovalRequestContract
 ArtifactContentGrant?: ArtifactContentGrantContract
+CatalogReuseEvidence?: CatalogReuseEvidenceContract
+CatalogSearchRequest?: CatalogSearchRequestContract
+CatalogSearchResult?: CatalogSearchResultContract
 CatalogSnapshot?: CatalogSnapshotContract
 CompiledContext?: CompiledContextContract
+ComponentCatalogArtifact?: ComponentCatalogArtifactContract
 ComponentDesignSpec?: ComponentDesignSpecContract
+ComponentIntent?: ComponentIntentContract
+ComponentIr?: ComponentIRContract
 ComponentPackageSpec?: ComponentPackageSpecContract
+ComponentRequest?: ComponentRequestContract
 ContractBom?: ContractBomContract
 ContractRevocationSnapshot?: ContractRevocationSnapshotContract
 ContractRuntimeRequest?: ContractRuntimeRequestContract
@@ -57,6 +64,7 @@ SubmitInputResponseRequest?: SubmitInputResponseRequestContract
 TargetSnapshot?: TargetSnapshotContract
 ToolDefinition?: ToolDefinitionContract
 UsageObservation?: UsageObservationContract
+ValidationFinding?: ValidationFindingContract
 WorkerLease?: WorkerLeaseContract
 WorkerResult?: WorkerResultContract
 }
@@ -1023,6 +1031,125 @@ securityGeneration: number
 url: string
 }
 /**
+ * Per-generation record of how the catalog was consulted (PRD-CAT-0001 §9.3, CAT-FR-021, CAT-FR-022). It names the Run-local catalog snapshot and revision, the fingerprint of the search request, the entries selected with their role (reuse, reference, or dependency), the entries considered with their scores, the entries rejected with a reason, and, when similarity and API overlap exceed the reviewed threshold, the likely duplicate for the review surface. It is evidence for review only and never rejects a component on its own; it is carried by ComponentIntent and resolvable after restart.
+ */
+export interface CatalogReuseEvidenceContract {
+catalogRevision: SharedPrimitivesActorId
+/**
+ * @minItems 0
+ * @maxItems 256
+ */
+considered: {
+componentId: string
+score: SharedPrimitivesDecimalString
+}[]
+fingerprint: SharedPrimitivesDigest
+kind: "CatalogReuseEvidence"
+likelyDuplicate?: {
+componentId: string
+similarity: SharedPrimitivesDecimalString
+}
+/**
+ * @minItems 0
+ * @maxItems 256
+ */
+rejected: {
+componentId: string
+reason: string
+}[]
+/**
+ * @minItems 0
+ * @maxItems 64
+ */
+selected: {
+componentId: string
+role: ("reuse" | "reference" | "dependency")
+}[]
+snapshotId: SharedPrimitivesActorId
+}
+/**
+ * Catalog search command (PRD-CAT-0001 §9.3, CAT-FR-018, CAT-FR-019) issued by the workflow's anvilkit.tool.catalog-search context tool or by the Studio BFF through searchComponentCatalog. It names the workspace and project scope, optionally pins a catalog revision (the active revision otherwise), carries at least one query criterion (free text, exact identity, name prefix, tags, props, capabilities, or a runtime-compatibility filter), the visibilities the caller is authorized to see, a page limit of at most fifty, and an opaque cursor. Every result is additionally scoped server-side to the caller's authorization; the request never widens it.
+ */
+export interface CatalogSearchRequestContract {
+catalogRevision?: SharedPrimitivesActorId
+cursor?: SharedPrimitivesCursor
+kind: "CatalogSearchRequest"
+limit: number
+query: {
+/**
+ * @minItems 1
+ * @maxItems 16
+ */
+capabilities?: [string]|[string, string]|[string, string, string]|[string, string, string, string]|[string, string, string, string, string]|[string, string, string, string, string, string]|[string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string]
+compatibility?: {
+puckRuntime: string
+reactRuntime: string
+}
+identity?: string
+namePrefix?: string
+/**
+ * @minItems 1
+ * @maxItems 16
+ */
+props?: [string]|[string, string]|[string, string, string]|[string, string, string, string]|[string, string, string, string, string]|[string, string, string, string, string, string]|[string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string]
+/**
+ * @minItems 1
+ * @maxItems 16
+ */
+tags?: [string]|[string, string]|[string, string, string]|[string, string, string, string]|[string, string, string, string, string]|[string, string, string, string, string, string]|[string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string]
+text?: string
+}
+scope: {
+projectId: SharedPrimitivesActorId
+workspaceId: SharedPrimitivesActorId
+}
+/**
+ * @minItems 1
+ * @maxItems 3
+ */
+visibility: [("public" | "workspace" | "project")]|[("public" | "workspace" | "project"), ("public" | "workspace" | "project")]|[("public" | "workspace" | "project"), ("public" | "workspace" | "project"), ("public" | "workspace" | "project")]
+}
+/**
+ * Ranked, scoped catalog search page (PRD-CAT-0001 §9.3, CAT-FR-018 to CAT-FR-020). It binds the page to the catalog revision and digest it was answered from and to the fingerprint (digest of the canonical request) that identifies the query, and lists the authorized entries with their identity, package, name, description, tags, decimal score, the fields that matched, visibility, status, and exemplar flag, followed by the page information. A cached page must be byte-identical to the authoritative page for the same revision, scope, query, filters, and policy.
+ */
+export interface CatalogSearchResultContract {
+catalogDigest: SharedPrimitivesDigest
+catalogRevision: SharedPrimitivesActorId
+/**
+ * @minItems 0
+ * @maxItems 50
+ */
+entries: {
+componentId: string
+componentName: string
+description: string
+exemplar: boolean
+/**
+ * @minItems 1
+ * @maxItems 7
+ */
+matchedFields: [("identity" | "name" | "description" | "tags" | "props" | "capabilities" | "compatibility")]|[("identity" | "name" | "description" | "tags" | "props" | "capabilities" | "compatibility"), ("identity" | "name" | "description" | "tags" | "props" | "capabilities" | "compatibility")]|[("identity" | "name" | "description" | "tags" | "props" | "capabilities" | "compatibility"), ("identity" | "name" | "description" | "tags" | "props" | "capabilities" | "compatibility"), ("identity" | "name" | "description" | "tags" | "props" | "capabilities" | "compatibility")]|[("identity" | "name" | "description" | "tags" | "props" | "capabilities" | "compatibility"), ("identity" | "name" | "description" | "tags" | "props" | "capabilities" | "compatibility"), ("identity" | "name" | "description" | "tags" | "props" | "capabilities" | "compatibility"), ("identity" | "name" | "description" | "tags" | "props" | "capabilities" | "compatibility")]|[("identity" | "name" | "description" | "tags" | "props" | "capabilities" | "compatibility"), ("identity" | "name" | "description" | "tags" | "props" | "capabilities" | "compatibility"), ("identity" | "name" | "description" | "tags" | "props" | "capabilities" | "compatibility"), ("identity" | "name" | "description" | "tags" | "props" | "capabilities" | "compatibility"), ("identity" | "name" | "description" | "tags" | "props" | "capabilities" | "compatibility")]|[("identity" | "name" | "description" | "tags" | "props" | "capabilities" | "compatibility"), ("identity" | "name" | "description" | "tags" | "props" | "capabilities" | "compatibility"), ("identity" | "name" | "description" | "tags" | "props" | "capabilities" | "compatibility"), ("identity" | "name" | "description" | "tags" | "props" | "capabilities" | "compatibility"), ("identity" | "name" | "description" | "tags" | "props" | "capabilities" | "compatibility"), ("identity" | "name" | "description" | "tags" | "props" | "capabilities" | "compatibility")]|[("identity" | "name" | "description" | "tags" | "props" | "capabilities" | "compatibility"), ("identity" | "name" | "description" | "tags" | "props" | "capabilities" | "compatibility"), ("identity" | "name" | "description" | "tags" | "props" | "capabilities" | "compatibility"), ("identity" | "name" | "description" | "tags" | "props" | "capabilities" | "compatibility"), ("identity" | "name" | "description" | "tags" | "props" | "capabilities" | "compatibility"), ("identity" | "name" | "description" | "tags" | "props" | "capabilities" | "compatibility"), ("identity" | "name" | "description" | "tags" | "props" | "capabilities" | "compatibility")]
+packageName: string
+packageVersion: string
+score: SharedPrimitivesDecimalString
+status: ("approved" | "deprecated" | "withdrawn")
+/**
+ * @minItems 0
+ * @maxItems 32
+ */
+tags: string[]
+visibility: ("public" | "workspace" | "project")
+}[]
+fingerprint: SharedPrimitivesDigest
+kind: "CatalogSearchResult"
+pageInfo: SharedPrimitivesPageInfo
+}
+export interface SharedPrimitivesPageInfo {
+hasMore: boolean
+limit: number
+nextCursor?: SharedPrimitivesCursor
+}
+/**
  * Immutable snapshot of the component catalog a page-generation run is permitted to compose from. It freezes the catalog revision and digest, the exact Puck schema and runtime revisions, every allowed component with its package revision, prop schema, defaults, slot rules, and nesting bound, the components that are forbidden or deprecated with their replacements, and the approved design-token, asset, and font references. It is produced by the catalog authority rather than by an editor client, and its digest is the value carried by TargetSnapshot's catalogDigest so that admission, candidate validation, preview, and apply all resolve the same catalog bytes. It confers no authority: it states what may be composed, never who may compose or commit it.
  */
 export interface CatalogSnapshotContract {
@@ -1131,6 +1258,135 @@ tools: number
 total: number
 user: number
 }
+}
+/**
+ * Producer-side signed component catalog bundle (PRD-CAT-0001 §9.1, §9.4; CAT-FR-011, CAT-FR-012, CAT-FR-016). Components CI exports the unsigned catalog and exemplar sources with provenance for one qualified commit; the catalog authority (ADR-026 §D11, the Pagix Component Registry) merges its scoped private components and signs the result with the catalog-release key registered in the platform contract trust root. It carries the catalog revision, the source repository, commit, and workflow run, the Contract BOM digest, the Puck and React runtime ranges, one closed entry per component with identity, package, description, tags, props, slots, variants, capabilities, style targets, i18n keys, peer dependencies, exports, visibility, status, preview reference, source evidence, and exemplar flag, the component-by-runtime compatibility matrix, the carried files by path, digest, size, and role, and the signature block. Descriptions and every other text field are data: nothing in this artifact instructs an agent. Agent Service verifies the signature, digest, Contract BOM compatibility, and schema before activation (CAT-FR-013); CatalogSnapshot remains the Run-local pinned view derived from one activated revision.
+ */
+export interface ComponentCatalogArtifactContract {
+catalogRevision: SharedPrimitivesActorId
+/**
+ * @minItems 0
+ * @maxItems 4096
+ */
+compatibilityMatrix: {
+compatible: boolean
+componentId: string
+puckRuntime: string
+reactRuntime: string
+}[]
+/**
+ * @minItems 0
+ * @maxItems 2048
+ */
+components: ComponentCatalogArtifactEntry[]
+contractBomDigest: SharedPrimitivesDigest
+createdAt: SharedPrimitivesTimestamp
+/**
+ * @minItems 0
+ * @maxItems 8192
+ */
+files: {
+digest: SharedPrimitivesDigest
+path: string
+role: ("metadata" | "exemplar-source" | "preview")
+size: number
+}[]
+kind: "ComponentCatalogArtifact"
+puckRuntime: string
+reactRuntime: string
+schemaVersion: number
+signature: string
+signatureAlgorithm: ("dsse-ed25519-v1" | "jws-eddsa-v1")
+signingKeyId: string
+signingPurpose: "catalog-release"
+sourceCommit: string
+sourceRepository: string
+sourceWorkflowRun: string
+}
+export interface ComponentCatalogArtifactEntry {
+/**
+ * @minItems 0
+ * @maxItems 16
+ */
+capabilities: []|[string]|[string, string]|[string, string, string]|[string, string, string, string]|[string, string, string, string, string]|[string, string, string, string, string, string]|[string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string]
+category: string
+componentId: string
+componentName: string
+componentSlug: string
+description: string
+exemplar: boolean
+/**
+ * @minItems 0
+ * @maxItems 32
+ */
+exports: {
+cjs: string
+esm: string
+subpath: string
+types: string
+}[]
+/**
+ * @minItems 0
+ * @maxItems 512
+ */
+i18nKeys: string[]
+packageName: string
+packageVersion: string
+peerDependencies: SharedPrimitivesBoundedStringMap
+previewRef: string
+/**
+ * @minItems 0
+ * @maxItems 64
+ */
+props: {
+default: string
+name: string
+puckField: ("text" | "textarea" | "number" | "select" | "radio" | "array" | "object" | "external" | "custom" | "slot")
+required: boolean
+}[]
+scaffoldType: string
+/**
+ * @minItems 0
+ * @maxItems 32
+ */
+slots: {
+/**
+ * @minItems 0
+ * @maxItems 256
+ */
+allowedComponents: string[]
+maxDepth: number
+name: string
+}[]
+sourceEvidence: {
+commit: string
+/**
+ * @minItems 0
+ * @maxItems 512
+ */
+files: {
+digest: SharedPrimitivesDigest
+path: string
+}[]
+path: string
+}
+status: ("approved" | "deprecated" | "withdrawn")
+/**
+ * @minItems 0
+ * @maxItems 64
+ */
+styleTargets: string[]
+/**
+ * @minItems 0
+ * @maxItems 32
+ */
+tags: string[]
+/**
+ * @minItems 0
+ * @maxItems 32
+ */
+variants: string[]
+visibility: ("public" | "workspace" | "project")
 }
 /**
  * Reviewable design-only proposal for a new component. It states the intent and rationale, the namespace and component name, the props with kinds and defaults, the variants and state model, the slot and composition rules, the design tokens it consumes, its accessibility requirements, the approved assets it needs, the preview scenarios a reviewer should see, and the decisions still open for a human to settle. It is semantically distinct from ComponentPackageSpec, which remains the later build-oriented boundary and is untouched by this contract. ComponentDesignSpec carries no source bundle, no dependency request, no lifecycle script, no build authorization, and no publication grant, so approving one authorizes further design work only and can never be read as permission to execute code, build, publish, or promote anything into a catalog.
@@ -4337,6 +4593,3139 @@ name: string
 }]
 }
 /**
+ * Interpreted component request (PRD-CAT-0001 §9.5, CAT-FR-006; artifact kind component-intent). It records the purpose (extending the intent member of ComponentDesignSpec with summary and rationale), the resolved naming, the public API of props, slots, and events, the variants, states, interactions, responsiveness, accessibility, and content model, the assumptions made and the questions still unresolved for a human, the target scope with the recorded distribution intent, the catalog reuse evidence the interpretation rests on, and the Brand Context snapshot it was interpreted against. It is a reviewable interpretation only and authorizes no generation, build, or publication.
+ */
+export interface ComponentIntentContract {
+accessibility: {
+/**
+ * @minItems 0
+ * @maxItems 32
+ */
+keyboard: {
+action: string
+key: string
+}[]
+/**
+ * @minItems 0
+ * @maxItems 16
+ */
+labels: []|[string]|[string, string]|[string, string, string]|[string, string, string, string]|[string, string, string, string, string]|[string, string, string, string, string, string]|[string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string]
+reducedMotion: boolean
+role: string
+}
+/**
+ * @minItems 0
+ * @maxItems 32
+ */
+assumptions: string[]
+brandSnapshotRef: SharedPrimitivesArtifactReference
+catalogEvidence: CatalogReuseEvidenceContract
+/**
+ * @minItems 0
+ * @maxItems 64
+ */
+contentModel: {
+description: string
+key: string
+kind: ("text" | "rich-text" | "image" | "link" | "list")
+}[]
+/**
+ * @minItems 0
+ * @maxItems 32
+ */
+interactions: {
+effect: string
+trigger: string
+}[]
+kind: "ComponentIntent"
+name: {
+componentName: string
+componentSlug: string
+packageName: string
+}
+publicApi: {
+/**
+ * @minItems 0
+ * @maxItems 32
+ */
+events: string[]
+/**
+ * @minItems 0
+ * @maxItems 64
+ */
+props: {
+control: string
+default?: string
+name: string
+required: boolean
+type: string
+}[]
+/**
+ * @minItems 0
+ * @maxItems 32
+ */
+slots: string[]
+}
+purpose: {
+rationale: string
+summary: string
+}
+responsiveness: {
+/**
+ * @minItems 0
+ * @maxItems 8
+ */
+breakpoints: []|[string]|[string, string]|[string, string, string]|[string, string, string, string]|[string, string, string, string, string]|[string, string, string, string, string, string]|[string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string]
+/**
+ * @minItems 0
+ * @maxItems 32
+ */
+rules: {
+breakpoint: string
+rule: string
+}[]
+}
+/**
+ * @minItems 0
+ * @maxItems 16
+ */
+states: []|[{
+description: string
+state: string
+trigger: string
+}]|[{
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}]|[{
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}]|[{
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}]|[{
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}]|[{
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}]|[{
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}]|[{
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}]|[{
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}]|[{
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}]|[{
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}]|[{
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}]|[{
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}]|[{
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}]|[{
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}]|[{
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}]
+targetScope: {
+distributionIntent: ("private" | "public")
+projectId: SharedPrimitivesActorId
+workspaceId: SharedPrimitivesActorId
+}
+/**
+ * @minItems 0
+ * @maxItems 12
+ */
+unresolved: []|[{
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}]|[{
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}]|[{
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}]|[{
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}]|[{
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}]|[{
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}]|[{
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}]|[{
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}]|[{
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}]|[{
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}]|[{
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}]|[{
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}, {
+blocking: boolean
+question: string
+responseSchema: SharedPrimitivesSchemaReference
+}]
+/**
+ * @minItems 0
+ * @maxItems 16
+ */
+variants: []|[{
+description: string
+name: string
+}]|[{
+description: string
+name: string
+}, {
+description: string
+name: string
+}]|[{
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}]|[{
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}]|[{
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}]|[{
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}]|[{
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}]|[{
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}]|[{
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}]|[{
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}]|[{
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}]|[{
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}]|[{
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}]|[{
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}]|[{
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}]|[{
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}, {
+description: string
+name: string
+}]
+}
+/**
+ * Canonical editable component model on the package path (PRD-CAT-0001 §9.5, CAT-FR-007, CAT-FR-008; artifact kind component-ir). It is a superset of the ComponentDesignSpec design (identity, props with their Puck field types and JSON-encoded serializable defaults, slots, a flat parent-linked composition tree of catalog components and primitives, variants, states, responsive overrides, accessibility semantics) plus its realization: design-token references by stable id from the Brand Context snapshot, approved asset references, the motion policy, the allowlisted dependency set, catalog lineage, locale content, the file plan naming which files the model writes and which the scaffold derives, and the generation binding (generator version and the Contract BOM, catalog, brand snapshot, and policy digests). schemaVersion is the IR content version: a document carrying an unknown version or field fails closed with COMPONENT_IR_INVALID. version is the monotonic edit counter advanced by each accepted patch. Studio, the generator, the Worker, and Pagix consume this one schema.
+ */
+export interface ComponentIRContract {
+accessibility: {
+/**
+ * @minItems 0
+ * @maxItems 32
+ */
+aria: {
+attribute: string
+value: string
+}[]
+contrastPolicy: ("wcag-aa" | "wcag-aaa")
+/**
+ * @minItems 0
+ * @maxItems 32
+ */
+keyboard: {
+action: string
+key: string
+}[]
+role: string
+}
+/**
+ * @minItems 0
+ * @maxItems 32
+ */
+assets: {
+assetRef: SharedPrimitivesArtifactReference
+slot: string
+}[]
+/**
+ * @minItems 0
+ * @maxItems 64
+ */
+catalogLineage: {
+componentId: string
+role: ("reuse" | "reference" | "dependency")
+}[]
+/**
+ * @minItems 0
+ * @maxItems 256
+ */
+composition: {
+nodeId: string
+parentNodeId: string
+ref: string
+slot: string
+source: ("catalog" | "primitive")
+}[]
+/**
+ * @minItems 0
+ * @maxItems 1024
+ */
+content: {
+key: string
+locale: string
+value: string
+}[]
+/**
+ * @minItems 0
+ * @maxItems 32
+ */
+dependencies: {
+packageName: string
+source: "allowlist"
+versionRange: string
+}[]
+/**
+ * @minItems 0
+ * @maxItems 64
+ */
+filePlan: {
+generator: ("model" | "scaffold")
+path: string
+}[]
+generation: {
+brandSnapshotDigest: SharedPrimitivesDigest
+catalogDigest: SharedPrimitivesDigest
+contractBomDigest: SharedPrimitivesDigest
+generatorVersion: string
+policyDigest: SharedPrimitivesDigest
+}
+identity: {
+componentName: string
+componentSlug: string
+packageName: string
+packageVersion: string
+}
+kind: "ComponentIR"
+motion: {
+/**
+ * @minItems 0
+ * @maxItems 16
+ */
+presets: []|[{
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}]|[{
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}]|[{
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}]|[{
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}]|[{
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}]|[{
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}]|[{
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}]|[{
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}]|[{
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}]|[{
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}]|[{
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}]|[{
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}]|[{
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}]|[{
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}]|[{
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}]|[{
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}, {
+params: SharedPrimitivesBoundedStringMap
+preset: string
+target: string
+}]
+reducedMotion: boolean
+}
+/**
+ * @minItems 0
+ * @maxItems 64
+ */
+props: {
+control: string
+default: string
+description: string
+name: string
+puckField: ("text" | "textarea" | "number" | "select" | "radio" | "array" | "object" | "external" | "custom" | "slot")
+required: boolean
+type: string
+}[]
+/**
+ * @minItems 0
+ * @maxItems 8
+ */
+responsive: []|[{
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}]|[{
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}, {
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}]|[{
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}, {
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}, {
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}]|[{
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}, {
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}, {
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}, {
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}]|[{
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}, {
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}, {
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}, {
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}, {
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}]|[{
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}, {
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}, {
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}, {
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}, {
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}, {
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}]|[{
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}, {
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}, {
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}, {
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}, {
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}, {
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}, {
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}]|[{
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}, {
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}, {
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}, {
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}, {
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}, {
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}, {
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}, {
+breakpoint: string
+overrides: SharedPrimitivesBoundedStringMap
+}]
+schemaVersion: number
+/**
+ * @minItems 0
+ * @maxItems 32
+ */
+slots: {
+/**
+ * @minItems 0
+ * @maxItems 64
+ */
+allowedComponents: string[]
+maxDepth: number
+name: string
+}[]
+/**
+ * @minItems 0
+ * @maxItems 16
+ */
+states: []|[{
+description: string
+state: string
+trigger: string
+}]|[{
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}]|[{
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}]|[{
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}]|[{
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}]|[{
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}]|[{
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}]|[{
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}]|[{
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}]|[{
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}]|[{
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}]|[{
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}]|[{
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}]|[{
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}]|[{
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}]|[{
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}, {
+description: string
+state: string
+trigger: string
+}]
+/**
+ * @minItems 0
+ * @maxItems 64
+ */
+tokens: {
+path: string
+tokenRef: string
+}[]
+/**
+ * @minItems 0
+ * @maxItems 16
+ */
+variants: []|[{
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}]|[{
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}]|[{
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}]|[{
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}]|[{
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}]|[{
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}]|[{
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}]|[{
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}]|[{
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}]|[{
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}]|[{
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}]|[{
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}]|[{
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}]|[{
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}]|[{
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}]|[{
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}, {
+name: string
+propOverrides: SharedPrimitivesBoundedStringMap
+}]
+version: number
+}
+/**
  * Bounded ComponentPackageSpec wire contract governed by PRD 0012.
  */
 export interface ComponentPackageSpecContract {
@@ -4371,6 +7760,50 @@ version: string
  * @maxItems 32
  */
 validationConstraints: [SharedPrimitivesPolicyReference, ...(SharedPrimitivesPolicyReference)[]]
+}
+/**
+ * Structured component request a Studio user submits to start a component-design or component-package run (PRD-CAT-0001 §9.5; master §8.1 / UX-FR-002). It carries the bounded prompt, naming and package-scope hints, the target project, preferred catalog components, brand and asset constraints, responsive, accessibility, and motion preferences, a recorded (never authorizing) distribution intent, and the caller's idempotency key. It is caller intent only: no run identity, workspace, actor, or authority is carried, and it is transported as CreateAgentRunRequest.input.componentRequest.
+ */
+export interface ComponentRequestContract {
+accessibility?: {
+level: ("A" | "AA" | "AAA")
+}
+assetConstraints?: {
+/**
+ * @minItems 0
+ * @maxItems 64
+ */
+allowedAssetIds: SharedPrimitivesActorId[]
+/**
+ * @minItems 0
+ * @maxItems 64
+ */
+disallowed: SharedPrimitivesActorId[]
+}
+brandId?: SharedPrimitivesActorId
+distributionIntent?: ("private" | "public")
+idempotencyKey: string
+kind: "ComponentRequest"
+motion?: {
+allowed: boolean
+reducedMotion: boolean
+}
+nameHint?: string
+packageScope?: string
+/**
+ * @minItems 1
+ * @maxItems 16
+ */
+preferredComponents?: [string]|[string, string]|[string, string, string]|[string, string, string, string]|[string, string, string, string, string]|[string, string, string, string, string, string]|[string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string, string, string, string, string, string, string, string, string]
+prompt: string
+responsive?: {
+/**
+ * @minItems 1
+ * @maxItems 8
+ */
+breakpoints: [string]|[string, string]|[string, string, string]|[string, string, string, string]|[string, string, string, string, string]|[string, string, string, string, string, string]|[string, string, string, string, string, string, string]|[string, string, string, string, string, string, string, string]
+}
+targetProjectId: SharedPrimitivesActorId
 }
 /**
  * Closed content-addressed Contract BOM manifest governed by design 0003 §8: the exact schema, registry, definition, Tool profile, policy, bundle, and generator/runtime identities resolved for a run. Resolution uses immutable digests, rejects missing, duplicate-conflicting, revoked, unsigned, or mismatched components, and performs no bundle-directed network fetch.
@@ -4971,11 +8404,6 @@ TraceAndScope: SharedPrimitivesTraceAndScope
 TraceContext: SharedPrimitivesTraceContext
 WorkspaceId: SharedPrimitivesActorId
 }
-export interface SharedPrimitivesPageInfo {
-hasMore: boolean
-limit: number
-nextCursor?: SharedPrimitivesCursor
-}
 export interface SharedPrimitivesTraceAndScope {
 actorId: SharedPrimitivesActorId
 traceContext: SharedPrimitivesTraceContext
@@ -5067,6 +8495,29 @@ provider: SharedPrimitivesActorId
 taskId: SharedPrimitivesActorId
 traceContext: SharedPrimitivesTraceContext
 unit: ("token" | "millisecond" | "byte" | "count" | "usd-micro")
+}
+/**
+ * One validation finding in the shape shared by validation-report artifacts, WorkerResult findings, the validateComponentModel response, and Studio's finding UI (PRD-CAT-0001 §9.7; WORK-FR-018, UX-FR-017). It names the stable check that produced it (for example puck.serializable-props), the governed problem code, the severity, the location by file, line, column, or IR pointer, a user-safe message, an optional remediation, the governed retryability, an optional evidence digest, and the producer kind and version. Messages carry no internal diagnostics, stack traces, credentials, or raw upstream bodies.
+ */
+export interface ValidationFindingContract {
+checkId: string
+code: string
+evidenceDigest?: SharedPrimitivesDigest
+kind: "ValidationFinding"
+location: {
+column?: number
+file?: string
+irPath?: string
+line?: number
+}
+message: string
+producer: {
+kind: ("contract-runtime" | "worker" | "agent-service")
+version: string
+}
+remediation?: string
+retryability: ("never" | "safe-immediate" | "safe-after-backoff" | "after-input" | "after-approval" | "after-rebase" | "operator-action")
+severity: ("blocking" | "correctable" | "warning" | "info")
 }
 /**
  * Bounded WorkerLease wire contract governed by PRD 0012.
