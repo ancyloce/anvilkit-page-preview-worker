@@ -76,7 +76,7 @@ artifactId: SharedPrimitivesActorId
 contractType: "AgentArtifact"
 createdAt: SharedPrimitivesTimestamp
 digest: SharedPrimitivesDigest
-kind: ("compiled-context" | "target-snapshot" | "agent-plan" | "worker-result" | "validation-report")
+kind: ("compiled-context" | "target-snapshot" | "agent-plan" | "worker-result" | "validation-report" | "catalog-snapshot" | "page-candidate" | "page-preview-task" | "page-preview-result" | "component-design-spec" | "component-intent" | "component-ir")
 lifecycle: ("pending" | "scanning" | "valid" | "finalized" | "committed" | "quarantined" | "expired" | "deleted")
 /**
  * @minItems 0

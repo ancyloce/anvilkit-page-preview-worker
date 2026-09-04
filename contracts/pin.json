@@ -4,15 +4,15 @@
   "description": "Vendored canonical Agent contract types. Generated in anvilkit-platform; do not edit here. Re-vendor and re-pin after any canonical contract change.",
   "generated": {
     "path": "contracts/generated/schema.ts",
-    "sha256": "sha256:dd0d7b3fc3eebe97023245fdd686569aa4c5bed62b5e01b805032d19cc683e52"
+    "sha256": "sha256:6b11b9af12073b10280df0fa3d777daba38642379d53f5eeac9692b74377554f"
   },
   "profile": {
     "path": "contracts/agent/profile/p0-kernel-profile.json",
-    "sha256": "sha256:732db5da05d7822a8ea709fafbd1c09faeb890bf78f2f357e34fd7628f772a72"
+    "sha256": "sha256:c3afa2484aa0e35c18bb070b7a46599cbe7b1a90f2446e8b9a9cbb931cff8d6b"
   },
   "lock": {
     "path": "contracts/agent/lock/contracts.lock.json",
-    "sha256": "sha256:eb9902a3a97c2d4b3ec371ff1174ab0c806f0e643b2db4cce79dbff83b6cec6e"
+    "sha256": "sha256:753605c55c0ecb37ebb6fbf6f577ee0d94dc1babca8453f25497573ffc4f26ef"
   },
   "source": "anvilkit-platform packages/contracts-typescript/src/generated (ADR-018 canonical generation)"
 }
